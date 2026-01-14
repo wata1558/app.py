@@ -1,8 +1,6 @@
 fastapi
-uvicorn[standard]
-pillow
+uvicorn
+Pillow
 ultralytics
-torch
-torch
-torchvision
-torchaudio
+torch==2.1.0+cpu --index-url https://download.pytorch.org/whl/cpu
+python-multipart
