@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pillow
+ultralytics
+torch
+torch
+torchvision
+torchaudio
