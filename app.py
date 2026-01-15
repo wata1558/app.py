@@ -9,6 +9,15 @@ import traceback
 app = FastAPI(title="Static Image YOLO Detection")
 
 model = YOLO("best32.pt")  # Render にモデルがあることを確認
+
+label_map = {
+    "can": "缶",
+    "cigarette": "タバコ",
+    "paper": "紙",
+    "plastic": "ペットボトル",  # plasticはAPIではペットボトルとして返す
+    "plasticbag": "袋"
+}
+
 @app.get("/")
 def root():
     return {"message": "Send a POST request to /detect with an image file."}
