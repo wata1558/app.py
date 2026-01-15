@@ -29,13 +29,13 @@ async def detect_image(file: UploadFile = File(...)):
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img_np = np.array(img)
 
-        results = model.predict(img_np, conf=0.6, iou=0.3, device="cpu")
+        results = model.predict(img_np, conf=0.6, iou=0.3, device="cpu", imgsz=(160, 256))
         detections = []
 
         for result in results:
             for box in result.boxes:
                 cls_id = int(box.cls)
-                label = model.names[cls_id]
+                label = label_map.get(model.names[cls_id], model.names[cls_id])
                 xyxy = box.xyxy.cpu().numpy().tolist()[0]
                 confidence = float(box.conf.cpu().numpy()[0])
                 detections.append({
