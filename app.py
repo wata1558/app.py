@@ -29,7 +29,7 @@ async def detect_image(file: UploadFile = File(...)):
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img_np = np.array(img)
 
-        results = model.predict(img_np, conf=0.6, iou=0.3, device="cpu", imgsz=(160, 256))
+        results = model.predict(img_np, conf=0.6, iou=0.3, device="cpu", imgsz=(320, 320))
         detections = []
 
         for result in results:
