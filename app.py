@@ -30,7 +30,7 @@ async def detect_image(file: UploadFile = File(...)):
         img = img.resize((320, 320))
         img_np = np.array(img)
 
-        results = model.predict(img_np, conf=0.6, iou=0.3, device="cpu", imgsz=(320, 320))
+        results = model.predict(img_np, conf=0.6, iou=0.3, device="cpu")
         detections = []
 
         for result in results:
