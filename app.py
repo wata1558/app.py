@@ -12,11 +12,11 @@ app = FastAPI(title="Static Image YOLO Detection")
 
 model = YOLO("best32.pt")  # Render にモデルがあることを確認
 
-model.model = quantize_dynamic(
-    model.model,
-    {torch.nn.Linear, torch.nn.Conv2d},
-    dtype=torch.qint8
-)
+#model.model = quantize_dynamic(
+    #model.model,
+    #{torch.nn.Linear, torch.nn.Conv2d},
+    #dtype=torch.qint8
+#)
 
 label_map = {
     "can": "缶",
