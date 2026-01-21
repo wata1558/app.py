@@ -42,8 +42,10 @@ async def detect_image(file: UploadFile = File(...)):
         detections = []
 
         for result in results:
+            print("boxes:", result.boxes)
+
             for box in result.boxes:
-                cls_id = int(box.cls)
+                cls_id = int(box.cls[0])
                 label = label_map.get(model.names[cls_id], model.names[cls_id])
                 detections.append({
                     "label": label,
