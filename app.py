@@ -5,10 +5,18 @@ import io
 import numpy as np
 from ultralytics import YOLO
 import traceback
+import torch
+from torch.quantization import quantize_dynamic
 
 app = FastAPI(title="Static Image YOLO Detection")
 
 model = YOLO("best32.pt")  # Render にモデルがあることを確認
+
+model.model = quantize_dynamic(
+    model.model,
+    {torch.nn.Linear, torch.nn.Conv2d},
+    dtype=torch.qint8
+)
 
 label_map = {
     "can": "缶",
@@ -37,12 +45,8 @@ async def detect_image(file: UploadFile = File(...)):
             for box in result.boxes:
                 cls_id = int(box.cls)
                 label = label_map.get(model.names[cls_id], model.names[cls_id])
-                xyxy = box.xyxy.cpu().numpy().tolist()[0]
-                confidence = float(box.conf.cpu().numpy()[0])
                 detections.append({
                     "label": label,
-                    "confidence": confidence,
-                    "bbox": xyxy
                 })
 
         return JSONResponse(content={"detections": detections})
