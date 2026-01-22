@@ -7,6 +7,7 @@ from ultralytics import YOLO
 import traceback
 import torch
 from torch.quantization import quantize_dynamic
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Static Image YOLO Detection")
 
@@ -17,6 +18,14 @@ model = YOLO("best32.pt")  # Render にモデルがあることを確認
     #{torch.nn.Linear, torch.nn.Conv2d},
     #dtype=torch.qint8
 #)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://heatmap-7a032.web.app"],  # Flutter Web アプリの URL を指定
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 label_map = {
     "can": "缶",
