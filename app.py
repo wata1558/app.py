@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Static Image YOLO Detection")
 
-model = YOLO("best32.pt")  # Render にモデルがあることを確認
+model = YOLO("best.pt")  # Render にモデルがあることを確認
 
 model.model = quantize_dynamic(
     model.model,
