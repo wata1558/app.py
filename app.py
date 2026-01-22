@@ -45,10 +45,10 @@ async def detect_image(file: UploadFile = File(...)):
             for box in result.boxes:
                 cls_id = int(box.cls[0])
                 label = label_map.get(model.names[cls_id], model.names[cls_id])
-                print(label)
                 detections.append({
                     "label": label,
                 })
+        print("最終 detections:", detections) 
 
         return JSONResponse(content={"detections": detections})
 
