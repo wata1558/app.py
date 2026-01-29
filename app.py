@@ -59,7 +59,11 @@ async def detect_image(file: UploadFile = File(...)):
             for box in result.boxes:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
-                label = label_map.get(model.names[cls_id], model.names[cls_id])
+                cls_id = int(box.cls[0])
+                if cls_id in model.names:
+                     label = label_map.get(model.names[cls_id], model.names[cls_id])
+                else:
+                    label = "その他"
                 detections.append({"label": label, "confidence": round(conf, 2)})
 
         logging.info(f"検出結果: {detections}")
