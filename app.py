@@ -5,23 +5,16 @@ import io
 import numpy as np
 from ultralytics import YOLO
 import traceback
-import torch
-from torch.quantization import quantize_dynamic
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Static Image YOLO Detection")
 
-model = YOLO("best.pt")  # Render にモデルがあることを確認
-
-#model.model = quantize_dynamic(
-#    model.model,
-#    {torch.nn.Linear, torch.nn.Conv2d},
-#    dtype=torch.qint8
-#)
+# ONNXモデルをロード
+model = YOLO("best.onnx")  # best.onnxを使用
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://heatmap-7a032.web.app"],  # Flutter Web アプリの URL を指定
+    allow_origins=["https://heatmap-7a032.web.app"],  # Flutter Web アプリの URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,7 +24,7 @@ label_map = {
     "can": "缶",
     "cigarette": "タバコ",
     "paper": "紙",
-    "plastic": "ペットボトル",  # plasticはAPIではペットボトルとして返す
+    "plastic": "ペットボトル",
     "plasticbag": "袋"
 }
 
@@ -42,11 +35,13 @@ def root():
 @app.post("/detect")
 async def detect_image(file: UploadFile = File(...)):
     try:
+        # 画像を読み込み
         image_bytes = await file.read()
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img = img.resize((320, 320))
         img_np = np.array(img)
 
+        # ONNXモデルで推論
         results = model.predict(img_np, conf=0.4, iou=0.3, device="cpu")
         detections = []
 
@@ -55,9 +50,9 @@ async def detect_image(file: UploadFile = File(...)):
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
                 label = label_map.get(model.names[cls_id], model.names[cls_id])
-                print(f"{label}: {conf:.2f}")
                 detections.append({
                     "label": label,
+                    "confidence": round(conf, 2)
                 })
 
         return JSONResponse(content={"detections": detections})
