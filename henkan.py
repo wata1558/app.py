@@ -2,6 +2,7 @@ from ultralytics import YOLO
 
 # PyTorch モデル読み込み
 model = YOLO("best.pt")
+print(model.names)
 
 # ONNX 変換
 model.export(

@@ -44,14 +44,7 @@ async def detect_image(file: UploadFile = File(...)):
     try:
         image_bytes = await file.read()
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        img = img.resize((320, 320))
-        img_np = np.array(img).astype(np.float32) / 255.0
-
-        img_np = np.transpose(img_np, (2,0,1))  # HWC -> CHW
-        img_np = np.expand_dims(img_np, axis=0)
-
-        # 推論: モデルによっては reshape/transpose 不要
-        # img_np = np.expand_dims(img_np, axis=0).transpose(0,3,1,2)
+        img_np = np.array(img)
 
         logging.info(f"入力画像形状: {img_np.shape}")
         logging.info(f"model.names: {model.names}")
