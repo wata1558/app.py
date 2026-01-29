@@ -13,7 +13,7 @@ app = FastAPI(title="Static Image YOLO Detection")
 
 # ONNXモデルをロード
 try:
-    model = YOLO("best.onnx")
+    model = YOLO("best.onnx", task="detect")
     logging.info("ONNXモデルロード成功")
 except Exception as e:
     logging.exception("ONNXモデルロード失敗")
