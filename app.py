@@ -54,14 +54,14 @@ async def detect_image(file: UploadFile = File(...)):
         logging.info(f"model.names: {model.names}")
 
 
-        results = model.predict(img_np, conf=0.4, iou=0.3, device="cpu", verbose=False)
+        results = model.predict(img_np, conf=0.5, iou=0.3, device="cpu", verbose=False)
         detections = []
 
         for result in results:
             for box in result.boxes:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
-                cls_id = int(box.cls[0])
+                logging.info(f"検出されたcls_id: {cls_id}, confidence: {conf}")
                 if cls_id in model.names:
                      label = label_map.get(model.names[cls_id], model.names[cls_id])
                 else:
