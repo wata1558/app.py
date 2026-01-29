@@ -51,6 +51,8 @@ async def detect_image(file: UploadFile = File(...)):
         # img_np = np.expand_dims(img_np, axis=0).transpose(0,3,1,2)
 
         logging.info(f"入力画像形状: {img_np.shape}")
+        logging.info(f"model.names: {model.names}")
+
 
         results = model.predict(img_np, conf=0.4, iou=0.3, device="cpu", verbose=False)
         detections = []
