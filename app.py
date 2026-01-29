@@ -39,7 +39,13 @@ async def detect_image(file: UploadFile = File(...)):
         image_bytes = await file.read()
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img = img.resize((320, 320))
-        img_np = np.array(img)
+        img_np = np.array(img).astype(np.float32)
+
+        # 0~1 に正規化（モデルによって必要な場合）
+        img_np /= 255.0
+
+        img_np = np.expand_dims(img_np, axis=0)      # バッチ次元追加
+        img_np = img_np.transpose(0, 3, 1, 2)  
 
         # ONNXモデルで推論
         results = model.predict(img_np, conf=0.4, iou=0.3, device="cpu")
