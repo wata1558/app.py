@@ -1,27 +1,27 @@
-import logging
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from PIL import Image
 import io
 import numpy as np
 from ultralytics import YOLO
+import traceback
+import torch
+from torch.quantization import quantize_dynamic
 from fastapi.middleware.cors import CORSMiddleware
-
-logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="Static Image YOLO Detection")
 
-# ONNXモデルをロード
-try:
-    model = YOLO("best.onnx", task="detect")
-    logging.info("ONNXモデルロード成功")
-except Exception as e:
-    logging.exception("ONNXモデルロード失敗")
-    raise e
+model = YOLO("best.pt")  # Render にモデルがあることを確認
+
+#model.model = quantize_dynamic(
+#    model.model,
+#    {torch.nn.Linear, torch.nn.Conv2d},
+#    dtype=torch.qint8
+#)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://heatmap-7a032.web.app"],
+    allow_origins=["https://heatmap-7a032.web.app"],  # Flutter Web アプリの URL を指定
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,7 +31,7 @@ label_map = {
     "can": "缶",
     "cigarette": "タバコ",
     "paper": "紙",
-    "plastic": "ペットボトル",
+    "plastic": "ペットボトル",  # plasticはAPIではペットボトルとして返す
     "plasticbag": "袋"
 }
 
@@ -44,32 +44,26 @@ async def detect_image(file: UploadFile = File(...)):
     try:
         image_bytes = await file.read()
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        img = img.resize((320, 320))
         img_np = np.array(img)
 
-        logging.info(f"入力画像形状: {img_np.shape}")
-        logging.info(f"model.names: {model.names}")
-
-
-        results = model.predict(img_np, conf=0.5, iou=0.3, device="cpu", verbose=False)
+        results = model.predict(img_np, conf=0.4, iou=0.3, device="cpu")
         detections = []
 
         for result in results:
             for box in result.boxes:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
-                logging.info(f"検出されたcls_id: {cls_id}, confidence: {conf}")
-                if cls_id in model.names:
-                     label = label_map.get(model.names[cls_id], model.names[cls_id])
-                else:
-                    label = "その他"
-                detections.append({"label": label, "confidence": round(conf, 2)})
+                label = label_map.get(model.names[cls_id], model.names[cls_id])
+                print(f"{label}: {conf:.2f}")
+                detections.append({
+                    "label": label,
+                })
 
-        logging.info(f"検出結果: {detections}")
         return JSONResponse(content={"detections": detections})
 
     except Exception as e:
-        logging.exception("推論中にエラー発生")
         return JSONResponse(
-            content={"error": str(e)},
+            content={"error": str(e), "trace": traceback.format_exc()},
             status_code=500
         )
