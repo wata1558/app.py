@@ -13,11 +13,6 @@ app = FastAPI(title="Static Image YOLO Detection")
 
 model = YOLO("best.pt")  # Render にモデルがあることを確認
 
-#model.model = quantize_dynamic(
-#    model.model,
-#    {torch.nn.Linear, torch.nn.Conv2d},
-#    dtype=torch.qint8
-#)
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,25 +37,34 @@ def root():
 @app.post("/detect")
 async def detect_image(file: UploadFile = File(...)):
     try:
+        # 画像読み込み
         image_bytes = await file.read()
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img = img.resize((320, 320))
         img_np = np.array(img)
 
+        # 推論
         results = model.predict(img_np, conf=0.4, iou=0.3, device="cpu")
-        detections = []
+        all_detections = []
 
+        # 全ての検出結果をリストに追加
         for result in results:
             for box in result.boxes:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
                 label = label_map.get(model.names[cls_id], model.names[cls_id])
-                print(f"{label}: {conf:.2f}")
-                detections.append({
+                all_detections.append({
                     "label": label,
+                    "confidence": conf
                 })
 
-        return JSONResponse(content={"detections": detections})
+        if not all_detections:
+            return JSONResponse(content={"detections": []})
+
+        # 信頼度が一番高いものを取得
+        best_detection = max(all_detections, key=lambda x: x["confidence"])
+
+        return JSONResponse(content={"detections": [best_detection]})
 
     except Exception as e:
         return JSONResponse(
